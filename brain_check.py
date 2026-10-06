@@ -185,15 +185,18 @@ def check(root: str, args, res: Result) -> None:
         else:
             res.add(OK, "journal", f"{len(reports)} reports indexed")
 
-    bases = [".", "_marks", "_study", "_journal", "_journal/reports"]
+    # Absolute, so results never depend on the caller's cwd.
+    bases = [root] + [os.path.join(root, d)
+                      for d in ("_marks", "_study", "_journal", "_journal/reports")]
     for d1 in sorted(os.listdir(root)):
         p1 = os.path.join(root, d1)
         if not os.path.isdir(p1) or d1.startswith(".") or d1 in SKIP_DIRS:
             continue
-        bases += [d1, f"{d1}/_marks", f"{d1}/_study"]
+        bases += [p1, os.path.join(p1, "_marks"), os.path.join(p1, "_study")]
         for d2 in sorted(os.listdir(p1)):
-            if os.path.isdir(os.path.join(p1, d2)) and d2 not in SKIP_DIRS:
-                bases.append(f"{d1}/{d2}")
+            p2 = os.path.join(p1, d2)
+            if os.path.isdir(p2) and d2 not in SKIP_DIRS:
+                bases.append(p2)
     ignore = []
     ipath = os.path.join(root, ".brain-check-ignore")
     if os.path.isfile(ipath):
